@@ -3,6 +3,7 @@ import "./App.css";
 
 type Cell = number;
 type Grid = Cell[][];
+type Position = { row: number; col: number } | null;
 
 // 数字に対応する色を定義
 const COLORS = [
@@ -49,6 +50,19 @@ function App() {
   const [grid, setGrid] = useState<Grid>(generateInitialGrid);
   const [score, setScore] = useState(0);
   const [moves, setMoves] = useState(0);
+  const [firstClick, setFirstClick] = useState<Position>(null);
+
+  // 2点間の距離を計算する関数
+  const calculateDistance = (pos1: Position, pos2: Position): number => {
+    if (!pos1 || !pos2) return 0;
+    return Math.abs(pos1.row - pos2.row) + Math.abs(pos1.col - pos2.col);
+  };
+
+  // 2点が対角線上にあるかチェックする関数
+  const isDiagonal = (pos1: Position, pos2: Position): boolean => {
+    if (!pos1 || !pos2) return false;
+    return Math.abs(pos1.row - pos2.row) === Math.abs(pos1.col - pos2.col);
+  };
 
   // 2x2, 3x3, 4x4のグリッドを90度回転させる関数
   const rotateGrid = (startRow: number, startCol: number, size: number) => {
@@ -98,11 +112,66 @@ function App() {
     setMoves(0);
   };
 
+  // セルがクリックされたときのハンドラー
+  const handleCellClick = (row: number, col: number) => {
+    if (!firstClick) {
+      // 最初のクリック
+      setFirstClick({ row, col });
+    } else {
+      // 2回目のクリック
+      const secondClick = { row, col };
+
+      // 同じセルをクリックした場合は選択をキャンセル
+      if (firstClick.row === row && firstClick.col === col) {
+        setFirstClick(null);
+        return;
+      }
+
+      // 対角線上にあるかチェック
+      if (isDiagonal(firstClick, secondClick)) {
+        const distance = calculateDistance(firstClick, secondClick);
+        const size = distance / 2 + 1;
+
+        // サイズが2,3,4のいずれかであることを確認
+        if (size === 2 || size === 3 || size === 4) {
+          // 回転の開始位置を計算
+          const startRow = Math.min(firstClick.row, secondClick.row);
+          const startCol = Math.min(firstClick.col, secondClick.col);
+
+          // グリッドの範囲内かチェック
+          if (startRow + size <= 4 && startCol + size <= 4) {
+            rotateGrid(startRow, startCol, size);
+          }
+        }
+      }
+
+      // 選択をリセット
+      setFirstClick(null);
+    }
+  };
+
+  // セルの背景色を計算する関数
+  const getCellStyle = (row: number, col: number) => {
+    const baseStyle = { backgroundColor: COLORS[grid[row][col]] };
+
+    if (firstClick && firstClick.row === row && firstClick.col === col) {
+      return {
+        ...baseStyle,
+        border: "3px solid #4CAF50",
+        transform: "scale(0.95)",
+      };
+    }
+
+    return baseStyle;
+  };
+
   return (
     <div className="game-container">
       <div className="game-info">
-        <div className="score">スコア: {score}</div>
-        <div className="moves">手数: {moves}</div>
+        <div className="stats">
+          <div className="score">スコア: {score}</div>
+          <div className="moves">手数: {moves}</div>
+        </div>
       </div>
       <div className="grid">
         {grid.map((row, i) => (
@@ -111,7 +180,8 @@ function App() {
               <div
                 key={`cell-${i}-${j}`}
                 className="cell"
-                style={{ backgroundColor: COLORS[cell] }}
+                style={getCellStyle(i, j)}
+                onClick={() => handleCellClick(i, j)}
               >
                 {cell}
               </div>
@@ -120,33 +190,6 @@ function App() {
         ))}
       </div>
       <div className="controls">
-        <button type="button" onClick={() => rotateGrid(0, 0, 2)}>
-          2x2 左上回転
-        </button>
-        <button type="button" onClick={() => rotateGrid(0, 2, 2)}>
-          2x2 右上回転
-        </button>
-        <button type="button" onClick={() => rotateGrid(2, 0, 2)}>
-          2x2 左下回転
-        </button>
-        <button type="button" onClick={() => rotateGrid(2, 2, 2)}>
-          2x2 右下回転
-        </button>
-        <button type="button" onClick={() => rotateGrid(0, 0, 3)}>
-          3x3 左上回転
-        </button>
-        <button type="button" onClick={() => rotateGrid(0, 1, 3)}>
-          3x3 右上回転
-        </button>
-        <button type="button" onClick={() => rotateGrid(1, 0, 3)}>
-          3x3 左下回転
-        </button>
-        <button type="button" onClick={() => rotateGrid(1, 1, 3)}>
-          3x3 右下回転
-        </button>
-        <button type="button" onClick={() => rotateGrid(0, 0, 4)}>
-          4x4 全体回転
-        </button>
         <button type="button" onClick={handleReset} className="reset-button">
           リセット
         </button>
