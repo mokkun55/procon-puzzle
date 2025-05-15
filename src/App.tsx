@@ -5,6 +5,13 @@ type Cell = number;
 type Grid = Cell[][];
 type Position = { row: number; col: number } | null;
 
+// 回転の統計情報の型を定義
+type RotationStats = {
+  size2: number;
+  size3: number;
+  size4: number;
+};
+
 // 数字に対応する色を定義
 const COLORS = [
   "#FFB6C1", // 0: ピンク
@@ -51,6 +58,11 @@ function App() {
   const [score, setScore] = useState(0);
   const [moves, setMoves] = useState(0);
   const [firstClick, setFirstClick] = useState<Position>(null);
+  const [rotationStats, setRotationStats] = useState<RotationStats>({
+    size2: 0,
+    size3: 0,
+    size4: 0,
+  });
 
   // 2点間の距離を計算する関数
   const calculateDistance = (pos1: Position, pos2: Position): number => {
@@ -74,6 +86,12 @@ function App() {
           grid[startRow + i][startCol + j];
       }
     }
+
+    // 回転の統計情報を更新
+    setRotationStats((prev) => ({
+      ...prev,
+      [`size${size}`]: prev[`size${size}` as keyof RotationStats] + 1,
+    }));
 
     setGrid(newGrid);
     calculateScore(newGrid);
@@ -110,6 +128,11 @@ function App() {
     setGrid(generateInitialGrid());
     setScore(0);
     setMoves(0);
+    setRotationStats({
+      size2: 0,
+      size3: 0,
+      size4: 0,
+    });
   };
 
   // セルがクリックされたときのハンドラー
@@ -165,26 +188,45 @@ function App() {
     return baseStyle;
   };
 
+  // セルのキーボードイベントハンドラー
+  const handleKeyPress = (
+    event: React.KeyboardEvent,
+    row: number,
+    col: number
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      handleCellClick(row, col);
+    }
+  };
+
   return (
     <div className="game-container">
       <div className="game-info">
         <div className="stats">
           <div className="score">スコア: {score}</div>
           <div className="moves">手数: {moves}</div>
+          <div className="rotation-stats">
+            <div>2x2回転: {rotationStats.size2}回</div>
+            <div>3x3回転: {rotationStats.size3}回</div>
+            <div>4x4回転: {rotationStats.size4}回</div>
+          </div>
         </div>
       </div>
       <div className="grid">
         {grid.map((row, i) => (
-          <div key={`row-${i}`} className="row">
+          <div key={`row-${i}-${row.join("-")}`} className="row">
             {row.map((cell, j) => (
-              <div
-                key={`cell-${i}-${j}`}
+              <button
+                key={`cell-${i}-${j}-${cell}`}
                 className="cell"
                 style={getCellStyle(i, j)}
                 onClick={() => handleCellClick(i, j)}
+                onKeyPress={(e) => handleKeyPress(e, i, j)}
+                type="button"
+                aria-label={`セル ${i + 1}-${j + 1}: 値 ${cell}`}
               >
                 {cell}
-              </div>
+              </button>
             ))}
           </div>
         ))}
