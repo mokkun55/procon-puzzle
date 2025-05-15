@@ -3,6 +3,8 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  background-color: white;
+  color: #333;
 }
 
 .logo {
@@ -46,6 +48,9 @@
   margin: 0 auto;
   padding: 20px;
   text-align: center;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .game-info {
@@ -62,14 +67,16 @@
   padding: 10px 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #333;
 }
 
 .grid {
   display: inline-block;
-  background-color: #f0f0f0;
+  background-color: white;
   padding: 10px;
   border-radius: 8px;
   margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .row {
@@ -89,6 +96,7 @@
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease;
+  color: #333;
 }
 
 .controls {
@@ -129,4 +137,48 @@ button:active {
 
 .reset-button:active {
   background-color: #b71c1c;
+}
+
+body {
+  background-color: white;
+  margin: 0;
+  padding: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .game-container {
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .score,
+  .moves {
+    background-color: #f0f0f0;
+    color: #333;
+  }
+
+  .grid {
+    background-color: white;
+  }
+
+  .cell {
+    color: #333;
+  }
+
+  button {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  button:hover {
+    background-color: #45a049;
+  }
+
+  .reset-button {
+    background-color: #f44336;
+  }
+
+  .reset-button:hover {
+    background-color: #d32f2f;
+  }
 }
