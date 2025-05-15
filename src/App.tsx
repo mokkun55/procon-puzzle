@@ -63,6 +63,32 @@ function App() {
     size3: 0,
     size4: 0,
   });
+  // グリッドの履歴を保持するstate
+  const [gridHistory, setGridHistory] = useState<Grid[]>([]);
+  const [scoreHistory, setScoreHistory] = useState<number[]>([]);
+  const [rotationStatsHistory, setRotationStatsHistory] = useState<
+    RotationStats[]
+  >([]);
+
+  // 一つ前に戻る関数
+  const handleUndo = () => {
+    if (gridHistory.length === 0) return;
+
+    const previousGrid = gridHistory[gridHistory.length - 1];
+    const previousScore = scoreHistory[scoreHistory.length - 1];
+    const previousRotationStats =
+      rotationStatsHistory[rotationStatsHistory.length - 1];
+
+    setGrid(previousGrid);
+    setScore(previousScore);
+    setRotationStats(previousRotationStats);
+    setMoves((prev) => prev - 1);
+
+    // 履歴から最後の要素を削除
+    setGridHistory((prev) => prev.slice(0, -1));
+    setScoreHistory((prev) => prev.slice(0, -1));
+    setRotationStatsHistory((prev) => prev.slice(0, -1));
+  };
 
   // 2点間の距離を計算する関数
   const calculateDistance = (pos1: Position, pos2: Position): number => {
@@ -86,6 +112,11 @@ function App() {
           grid[startRow + i][startCol + j];
       }
     }
+
+    // 現在の状態を履歴に保存
+    setGridHistory((prev) => [...prev, grid]);
+    setScoreHistory((prev) => [...prev, score]);
+    setRotationStatsHistory((prev) => [...prev, rotationStats]);
 
     // 回転の統計情報を更新
     setRotationStats((prev) => ({
@@ -133,6 +164,10 @@ function App() {
       size3: 0,
       size4: 0,
     });
+    // 履歴もリセット
+    setGridHistory([]);
+    setScoreHistory([]);
+    setRotationStatsHistory([]);
   };
 
   // セルがクリックされたときのハンドラー
@@ -232,6 +267,14 @@ function App() {
         ))}
       </div>
       <div className="controls">
+        <button
+          type="button"
+          onClick={handleUndo}
+          className="undo-button"
+          disabled={gridHistory.length === 0}
+        >
+          一つ前に戻る
+        </button>
         <button type="button" onClick={handleReset} className="reset-button">
           リセット
         </button>
