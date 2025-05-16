@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import "./App.css";
+import HowToUse from "./HowToUse";
 
 type Cell = number;
 type Grid = Cell[][];
@@ -8,6 +9,14 @@ type Position = { row: number; col: number } | null;
 // 回転の統計情報の型を定義
 type RotationStats = {
   [key: string]: number; // 動的な回転サイズに対応
+};
+
+// 問題の型定義を追加
+type Problem = {
+  field: {
+    size: number;
+    entities: number[][];
+  };
 };
 
 // HSVからRGBへの変換関数
@@ -102,6 +111,10 @@ function App() {
   const [rotationStatsHistory, setRotationStatsHistory] = useState<
     RotationStats[]
   >([]);
+  // JSON入力用のstateを追加
+  const [jsonInput, setJsonInput] = useState<string>("");
+  const [isJsonMode, setIsJsonMode] = useState<boolean>(false);
+  const [showHowToUse, setShowHowToUse] = useState(false);
 
   // 現在のマップサイズに応じた色を生成
   const currentColors = useMemo(() => {
@@ -329,6 +342,40 @@ function App() {
     }
   };
 
+  // JSONからマップを生成する関数
+  const generateMapFromJson = (jsonString: string) => {
+    try {
+      const data = JSON.parse(jsonString);
+      const problem = data.problem as Problem;
+
+      if (!problem?.field?.size || !problem?.field?.entities) {
+        throw new Error("Invalid JSON format");
+      }
+
+      const size = problem.field.size;
+      const entities = problem.field.entities;
+
+      // サイズの検証
+      if (
+        size !== entities.length ||
+        entities.some((row) => row.length !== size)
+      ) {
+        throw new Error("Invalid grid size");
+      }
+
+      setMapSize(size);
+      setGrid(entities);
+      setScore(0);
+      setMoves(0);
+      setRotationStats(initializeRotationStats(size));
+      setGridHistory([]);
+      setScoreHistory([]);
+      setRotationStatsHistory([]);
+    } catch (error) {
+      alert(`無効なJSONフォーマットです: ${(error as Error).message}`);
+    }
+  };
+
   return (
     <div className="game-container">
       <div className="game-info">
@@ -348,6 +395,7 @@ function App() {
               <select
                 value={mapSize}
                 onChange={(e) => setMapSize(Number(e.target.value))}
+                disabled={isJsonMode}
               >
                 {[4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24].map(
                   (size) => (
@@ -359,8 +407,43 @@ function App() {
               </select>
             </label>
           </div>
+          <div className="json-control">
+            <label>
+              <input
+                type="checkbox"
+                checked={isJsonMode}
+                onChange={(e) => setIsJsonMode(e.target.checked)}
+              />
+              JSONモード
+            </label>
+            {isJsonMode && (
+              <div className="json-input">
+                <textarea
+                  value={jsonInput}
+                  onChange={(e) => setJsonInput(e.target.value)}
+                  placeholder="JSONを入力してください"
+                  rows={5}
+                />
+                <button
+                  onClick={() => generateMapFromJson(jsonInput)}
+                  className="json-button"
+                  type="button"
+                >
+                  マップを生成
+                </button>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowHowToUse(!showHowToUse)}
+            className="how-to-use-button"
+          >
+            {showHowToUse ? "使い方を隠す" : "使い方を表示"}
+          </button>
         </div>
       </div>
+      {showHowToUse && <HowToUse />}
       <div className="grid" style={getGridStyle()}>
         {grid.map((row, i) =>
           row.map((cell, j) => (
